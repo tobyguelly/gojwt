@@ -18,10 +18,9 @@ func main() {
 		},
 	}
 
-	/*
-		jwt.Payload.Custom = map[string]interface{}{
-			"Hello": "World",
-		}*/
+	jwt.Payload.Custom = map[string]interface{}{
+		"Hello": "World",
+	}
 
 	err := jwt.Sign(secret)
 	if err != nil {
