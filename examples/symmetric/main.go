@@ -13,8 +13,7 @@ func main() {
 	jwt := gojwt.JWT{
 		Header: gojwt.DefaultHeader,
 		Payload: gojwt.Payload{
-			Issuer:  "1208202852",
-			Subject: "1927027602",
+			Issuer: "gojwt",
 		},
 	}
 

@@ -1,24 +1,27 @@
-package gojwt
+package gojwt_test
 
-import "testing"
+import (
+	"github.com/tobyguelly/gojwt"
+	"testing"
+)
 
 func TestPayload_IsEmpty(t *testing.T) {
 	tests := []struct {
-		Input          Payload
+		Input          gojwt.Payload
 		ExpectedOutput bool
 	}{
 		{
-			Input: Payload{
+			Input: gojwt.Payload{
 				Issuer: "1234",
 			},
 			ExpectedOutput: false,
 		},
 		{
-			Input:          Payload{},
+			Input:          gojwt.Payload{},
 			ExpectedOutput: true,
 		},
 		{
-			Input: Payload{
+			Input: gojwt.Payload{
 				Custom: map[string]interface{}{
 					"hello": "world",
 				},
@@ -40,11 +43,11 @@ func TestPayload_IsEmpty(t *testing.T) {
 
 func TestPayload_GetSetCustom(t *testing.T) {
 	tests := []struct {
-		Input Payload
+		Input gojwt.Payload
 		Set   map[string]interface{}
 	}{
 		{
-			Input: Payload{
+			Input: gojwt.Payload{
 				Issuer: "1234",
 			},
 			Set: map[string]interface{}{
@@ -71,21 +74,21 @@ func TestPayload_GetSetCustom(t *testing.T) {
 
 func TestPayload_Json(t *testing.T) {
 	tests := []struct {
-		Input          Payload
+		Input          gojwt.Payload
 		ExpectedOutput string
 	}{
 		{
-			Input: Payload{
+			Input: gojwt.Payload{
 				Issuer: "1234",
 			},
 			ExpectedOutput: "{\"iss\":\"1234\"}",
 		},
 		{
-			Input:          Payload{},
+			Input:          gojwt.Payload{},
 			ExpectedOutput: "{}",
 		},
 		{
-			Input: Payload{
+			Input: gojwt.Payload{
 				Custom: map[string]interface{}{
 					"hello": "world",
 				},

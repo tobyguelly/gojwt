@@ -1,25 +1,26 @@
 package gojwt
 
 import (
+	"crypto/rsa"
 	"encoding/json"
 	"strings"
 )
 
-// JWT is a struct holding the values a JWT
+// JWT is a struct holding the values a JWT.
 type JWT struct {
 
-	// Header is the JWT header field
+	// Header is the JWT header field.
 	Header Header
 
-	// Payload is the JWT payload field
+	// Payload is the JWT payload field.
 	Payload Payload
 
-	// Signature is a string holding the JWT Header and the JWT Payload encrypted with the algorithm of the JWT Header
+	// Signature is a string holding the JWT Header and the JWT Payload encrypted with the algorithm of the JWT Header.
 	// Signature = Header.Algorithm(Header.Json() + "." + Payload.Json(), SECRET)
 	Signature string
 }
 
-// NewJWT creates a JWT object from a jwt string
+// NewJWT creates a JWT object from a JWT string.
 // Returns empty JWT, ErrBadJWTTok if the JWT is not a valid JWT,
 // or returns the JWT if everything was successful.
 func NewJWT(jwt string) (JWT, error) {
@@ -58,31 +59,16 @@ func NewJWT(jwt string) (JWT, error) {
 	return res, nil
 }
 
-// IsEmpty returns a bool, whether the Header and the Payload are empty or not
+// IsEmpty returns a bool, whether the Header and the Payload are empty or not.
 func (j *JWT) IsEmpty() bool {
 	return j.Header.IsEmpty() && j.Payload.IsEmpty()
 }
 
-// DecodeSignature decodes the Signature of the JWT with the base64 algorithm
-func (j *JWT) DecodeSignature() error {
-	res, err := DecodeBase64(j.Signature)
-	if err != nil {
-		return err
-	}
-	j.Signature = string(res)
-	return nil
-}
-
-// EncodeSignature encodes the Signature of the JWT with the base64 algorithm
-func (j *JWT) EncodeSignature() {
-	j.Signature = EncodeBase64(j.Signature)
-}
-
-// Validate validates a JWT based on a given secret string
+// Validate validates a JWT based on a given secret string using a symmetric encryption algorithm.
 // Returns ErrAlgNotImp if the algorithm in the Header is not implemented yet,
 // ErrTokNotSig if the token has not been signed yet,
 // and ErrInvSecKey if the entered secret string is invalid corresponding to the signature.
-// Returns nil if the JWT is validated with the entered secret
+// Returns nil if the JWT is validated with the entered secret.
 func (j *JWT) Validate(secret string) error {
 	res, err := j.Data()
 	if err != nil {
@@ -105,9 +91,36 @@ func (j *JWT) Validate(secret string) error {
 	return ErrInvSecKey
 }
 
-// Sign signs a JWT and creates the Signature, saved in the JWT
-// This method overwrites the Signature field in the JWT if it exists
-// Returns ErrAlgNotImp if the algorithm in the Header is not implemented yet
+// ValidateWithKey validates a JWT based on a given secret string using an asymmetric encryption algorithm
+// Returns ErrAlgNotImp if the algorithm in the Header is not implemented yet,
+// ErrTokNotSig if the token has not been signed yet,
+// and ErrInvSecKey if the entered key and/or label is invalid corresponding to the signature.
+// Returns nil if the JWT is validated with the entered key.
+func (j *JWT) ValidateWithKey(label string, key rsa.PrivateKey) error {
+	res, err := j.Data()
+	if err != nil {
+		return err
+	}
+	algorithm, exists := decryptionAlgorithms[j.Header.Algorithm]
+	if !exists {
+		return ErrAlgNotImp
+	}
+	if j.Signature == "" {
+		return ErrTokNotSig
+	}
+	result, err := algorithm(j.Signature, []byte(label), key)
+	if err != nil && err != rsa.ErrDecryption {
+		return err
+	}
+	if res == result {
+		return nil
+	}
+	return ErrInvSecKey
+}
+
+// Sign signs a JWT using a symmetric encryption algorithm and creates the Signature,
+// saved in the JWT. This method overwrites the Signature field in the JWT if it exists.
+// Returns ErrAlgNotImp if the algorithm in the Header is not implemented yet.
 func (j *JWT) Sign(secret string) error {
 	res, err := j.Data()
 	if err != nil {
@@ -121,8 +134,24 @@ func (j *JWT) Sign(secret string) error {
 	return err
 }
 
-// String formats the JWT into a JWT string and returns the result
-// If the token has not been signed yet, a signature is created using the SignHS256 algorithm and no secret
+// SignWithKey signs a JWT using an asymmetric encryption algorithm and creates the Signature,
+// saved in the JWT. This method overwrites the Signature field in the JWT if it exists.
+// Returns ErrAlgNotImp if the algorithm in the Header is not implemented yet.
+func (j *JWT) SignWithKey(label string, key rsa.PublicKey) error {
+	res, err := j.Data()
+	if err != nil {
+		return err
+	}
+	algorithm, exists := encryptionAlgorithms[j.Header.Algorithm]
+	if !exists {
+		return ErrAlgNotImp
+	}
+	j.Signature, err = algorithm(res, []byte(label), key)
+	return err
+}
+
+// String formats the JWT into a JWT string and returns the result.
+// If the token has not been signed yet, a signature is created using the SignHS256 algorithm and no secret.
 // Result = Base64Encode(Header.Json()) + "." + Base64Encode(Payload.Json()) + "." + Signature
 func (j *JWT) String() string {
 	data, _ := j.Data()
@@ -140,7 +169,7 @@ func (j *JWT) String() string {
 	return data + "." + j.Signature
 }
 
-// Data formats the Header and Payload fields of a JWT into a string
+// Data formats the Header and Payload fields of a JWT into a string.
 // Result = Base64Encode(Header.Json()) + "." + Base64Encode(Payload.Json())
 func (j *JWT) Data() (string, error) {
 	header, err := j.Header.Json()

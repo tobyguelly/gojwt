@@ -1,24 +1,25 @@
-package gojwt
+package gojwt_test
 
 import (
+	"github.com/tobyguelly/gojwt"
 	"testing"
 )
 
 func TestHeader_IsEmpty(t *testing.T) {
 	tests := []struct {
-		Input          Header
+		Input          gojwt.Header
 		ExpectedOutput bool
 	}{
 		{
-			Input:          DefaultHeader,
+			Input:          gojwt.DefaultHeader,
 			ExpectedOutput: false,
 		},
 		{
-			Input:          Header{},
+			Input:          gojwt.Header{},
 			ExpectedOutput: true,
 		},
 		{
-			Input: Header{
+			Input: gojwt.Header{
 				Type: "JWT",
 			},
 			ExpectedOutput: false,
@@ -38,25 +39,25 @@ func TestHeader_IsEmpty(t *testing.T) {
 
 func TestHeader_Json(t *testing.T) {
 	tests := []struct {
-		Input          Header
+		Input          gojwt.Header
 		ExpectedOutput string
 	}{
 		{
-			Input: Header{
-				Algorithm: AlgHS256,
-				Type:      TypJWT,
+			Input: gojwt.Header{
+				Algorithm: gojwt.AlgHS256,
+				Type:      gojwt.TypJWT,
 			},
 			ExpectedOutput: "{\"alg\":\"HS256\",\"typ\":\"JWT\"}",
 		},
 		{
-			Input:          Header{},
+			Input:          gojwt.Header{},
 			ExpectedOutput: "{\"alg\":\"\",\"typ\":\"\"}",
 		},
 		{
-			Input: Header{
-				Algorithm:   AlgHS256,
+			Input: gojwt.Header{
+				Algorithm:   gojwt.AlgHS256,
 				ContentType: "JWT",
-				Type:        TypJWT,
+				Type:        gojwt.TypJWT,
 			},
 			ExpectedOutput: "{\"alg\":\"HS256\",\"cty\":\"JWT\",\"typ\":\"JWT\"}",
 		},
