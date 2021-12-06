@@ -5,35 +5,35 @@ import (
 	"strings"
 )
 
-// Payload is the payload section of the JWT token
+// Payload is the payload section of the JWT token.
 type Payload struct {
 
-	// Issuer is the issuer field in the JWT token
+	// Issuer is the issuer claim in the JWT token.
 	Issuer string `json:"iss,omitempty"`
 
-	// Subject is the subject field in the JWT token
+	// Subject is the subject claim in the JWT token.
 	Subject string `json:"sub,omitempty"`
 
-	// Audience is the audience field in the JWT token
+	// Audience is the audience claim in the JWT token.
 	Audience string `json:"aud,omitempty"`
 
-	// ExpirationTime is the expiration time field in the JWT token
+	// ExpirationTime is the expiration time claim in the JWT token.
 	ExpirationTime string `json:"exp,omitempty"`
 
-	// NotBefore is the not before field in the JWT token
+	// NotBefore is the not before claim in the JWT token.
 	NotBefore string `json:"nbf,omitempty"`
 
-	// IssuedAt is the issued at field in the JWT token
+	// IssuedAt is the issued at claim in the JWT token.
 	IssuedAt string `json:"iat,omitempty"`
 
-	// JWTID is the JWT id field in the JWT token
+	// JWTID is the JWT id claim in the JWT token.
 	JWTID string `json:"jti,omitempty"`
 
-	// Custom is a map containing custom fields and values for the JWT token
+	// Custom is a map containing custom keys and claims for the JWT token.
 	Custom map[string]interface{} `json:"-"`
 }
 
-// IsEmpty returns a bool, whether the Payload is empty or not
+// IsEmpty returns a bool, whether the Payload is empty or not.
 func (p *Payload) IsEmpty() bool {
 	empty := Payload{}
 	resThis, _ := p.Json()
@@ -41,7 +41,7 @@ func (p *Payload) IsEmpty() bool {
 	return resThis == resEmpty
 }
 
-// SetCustom sets a key and a value in the Custom values
+// SetCustom sets a key and a value in the Custom values.
 func (p *Payload) SetCustom(key string, value interface{}) *Payload {
 	if p.Custom == nil {
 		p.Custom = make(map[string]interface{})
@@ -50,12 +50,12 @@ func (p *Payload) SetCustom(key string, value interface{}) *Payload {
 	return p
 }
 
-// GetCustom returns a field in the Custom values, identified by the key
+// GetCustom returns a field in the Custom values, identified by the key.
 func (p *Payload) GetCustom(key string) interface{} {
 	return p.Custom[key]
 }
 
-// Json formats the Payload into json format
+// Json formats the Payload into JSON format.
 func (p *Payload) Json() (string, error) {
 	preRes, err := json.Marshal(p)
 	if err != nil {

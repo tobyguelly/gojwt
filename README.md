@@ -5,12 +5,15 @@
 [![Code Coverage](https://gocover.io/_badge/github.com/tobyguelly/gojwt)](https://gocover.io/github.com/tobyguelly/gojwt)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](https://raw.githubusercontent.com/tobyguelly/gojwt/main/LICENSE)
 
-GoJWT is a simple and lightweight library for creating, formatting, manipulating, signing and validating Json Web Tokens in GoLang, used for token-based authentication. Specified in [RFC 7519](https://datatracker.ietf.org/doc/html/rfc7519)
+GoJWT is a simple and lightweight library for creating, formatting, manipulating, signing and validating [JSON Web Tokens](https://jwt.io) in GoLang, used for token-based authorization. Specified in [RFC 7519](https://datatracker.ietf.org/doc/html/rfc7519)
 
 ## Installation
 ```
 go get -u github.com/tobyguelly/gojwt
 ```
+
+## Supported Algorithms
+`HS256`, `HS384`, `HS512`, `RS256`, `RS384`, `RS512`
 
 ## Examples
 
@@ -25,10 +28,10 @@ jwt := gojwt.JWT {
 		Subject: "1927027602",
 	},
 }
-fmt.Println(jwt.String()) // eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIxMjA4MjAyODUyIiwic3ViIjoiMTkyNzAyNzYwMiJ9.-BUwqkL2DFgHTSaAdVsnrppM9R2QkpAGlpZp3N2Wir4
+fmt.Println(jwt.String()) // eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2p3dCIsIkhlbGxvIjoiV29ybGQifQ.G2QGjaJbWuqnD33HnDjI5VcCkuZx1NFcmzSbW9ZCQSQ
 ```
 
-### Custom fields in the JWT payload
+### Custom fields in the Token payload
 - Custom fields can be applied to the JWT `Payload` by setting the `Custom` property to a map
 ```go
 jwt.Payload.Custom = map[string]interface{}{
@@ -36,8 +39,9 @@ jwt.Payload.Custom = map[string]interface{}{
 }
 ```
 
-### Signing and Validating JWTs
-- JWTs can be signed and validated with a secret string
+### Signing and Validating Tokens
+- JWTs can be signed and validated with a secret string with the `Sign()` and `Validate()` method
+- Dependent of the `Algorithm` field in the JWT `Header`, a symmetric encryption algorithm will be chosen
 - The error returned by the `Validate()` method indicates, whether the validation was successful or not
   - If the token is valid using the given secret, `nil` is returned
   - If the token has not been signed yet, the error `ErrTokNotSig` is returned
@@ -54,22 +58,30 @@ if err == nil {
 }
 ```
 
-### Loading JWTs
-- Parsed JWTs can be loaded by using the `NewJWT` function
-  - If the given string is not a valid JWT, an error is returned
+### Support for Asymmetric Encryption/Decryption
+- JWTs can also be signed using public/private keys and asymmetric encryption by using the `SignWithKey()` and `ValidateWithKey()` method
+- Dependent of the `Algorithm` field in the JWT `Header`, an asymmetric encryption/decryption algorithm will be chosen
+- The same type of errors as for the symmetric encryption are returned by those methods
 ```go
-jwt, err := gojwt.NewJWT("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIxMjA4MjAyODUyIiwic3ViIjoiMTkyNzAyNzYwMiJ9.-BUwqkL2DFgHTSaAdVsnrppM9R2QkpAGlpZp3N2Wir4")
+privateKey, _ := rsa.GenerateKey(rand.Reader, 2048)
+publicKey := privateKey.PublicKey
+
+err := jwt.SignWithKey("", publicKey)
 if err == nil {
-	fmt.Println("JWT successfully loaded!")
+	fmt.Println("JWT successfully signed using public key!")
+}
+err := jwt.ValidateWithKey("", *privateKey)
+if err == nil {
+	fmt.Println("JWT successfully validated using private key!")
 }
 ```
 
-### Additional Encoding for Signature
-- You can additionally base64 encode/decode the `Signature` property of the JWT
+### Loading Tokens
+- Parsed JWTs can be loaded by using the `NewJWT` function
+  - If the given string is not a valid JWT, an error is returned
 ```go
-jwt.EncodeSignature()
-err := jwt.DecodeSignature()
+jwt, err := gojwt.NewJWT("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2p3dCIsIkhlbGxvIjoiV29ybGQifQ.G2QGjaJbWuqnD33HnDjI5VcCkuZx1NFcmzSbW9ZCQSQ")
 if err == nil {
-	fmt.Println("JWT signature decoded!")
+	fmt.Println("JWT successfully loaded!")
 }
 ```
