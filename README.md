@@ -31,7 +31,7 @@ jwt := gojwt.JWT {
 fmt.Println(jwt.String()) // eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2p3dCIsIkhlbGxvIjoiV29ybGQifQ.G2QGjaJbWuqnD33HnDjI5VcCkuZx1NFcmzSbW9ZCQSQ
 ```
 
-### Custom fields in the Token payload
+### Custom Fields in the Token Payload
 - Custom fields can be applied to the JWT `Payload` by setting the `Custom` property to a map
 ```go
 jwt.Payload.Custom = map[string]interface{}{
