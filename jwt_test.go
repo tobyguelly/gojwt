@@ -303,6 +303,10 @@ func TestJWT_SignAndValidateWithKey(t *testing.T) {
 		tests = append(tests, test)
 	}
 	wrongKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		t.Errorf("Failed test because of error: %s", err.Error())
+		t.FailNow()
+	}
 	tests = append(tests, rsaTest{
 		Input: gojwt.JWT{
 			Header: gojwt.Header{
