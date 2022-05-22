@@ -2,10 +2,11 @@
 [![GoReportCard](https://goreportcard.com/badge/github.com/tobyguelly/gojwt)](https://goreportcard.com/report/github.com/tobyguelly/gojwt)
 [![GoDoc](https://godoc.org/github.com/tobyguelly/gojwt?status.svg)](https://godoc.org/github.com/tobyguelly/gojwt)
 ![BuildStatus](https://img.shields.io/github/workflow/status/tobyguelly/gojwt/Run%20Unit%20Tests)
-[![Code Coverage](https://gocover.io/_badge/github.com/tobyguelly/gojwt)](https://gocover.io/github.com/tobyguelly/gojwt)
+[![CodeFactor](https://www.codefactor.io/repository/github/tobyguelly/gojwt/badge)](https://www.codefactor.io/repository/github/tobyguelly/gojwt)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](https://raw.githubusercontent.com/tobyguelly/gojwt/main/LICENSE)
+<!-- [![Code Coverage](https://gocover.io/_badge/github.com/tobyguelly/gojwt)](https://gocover.io/github.com/tobyguelly/gojwt) -->
 
-GoJWT is a simple and lightweight library for creating, formatting, manipulating, signing and validating [JSON Web Tokens](https://jwt.io) in GoLang, used for token-based authorization. Specified in [RFC 7519](https://datatracker.ietf.org/doc/html/rfc7519)
+GoJWT is a simple and lightweight library for creating, formatting, manipulating, signing and validating [JSON Web Tokens](https://jwt.io) in Golang, used for token-based authorization. Specified in [RFC 7519](https://datatracker.ietf.org/doc/html/rfc7519)
 
 ## Installation
 ```
