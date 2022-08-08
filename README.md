@@ -20,23 +20,25 @@ go get -u github.com/tobyguelly/gojwt
 
 ### Creating JWTs
 - You can create JWTs using the `JWT` struct
-- Then you can format them into a JWT using the `String()` method
+- Then you can format them into a JWT using the `Parse()` method
 ```go
 jwt := gojwt.JWT {
 	Header:  gojwt.DefaultHeader,
 	Payload: gojwt.Payload {
-		Issuer:  "1208202852",
-		Subject: "1927027602",
+		Issuer:  "gojwt",
+        Subject: "Example Token",
 	},
 }
-fmt.Println(jwt.String()) // eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2p3dCIsIkhlbGxvIjoiV29ybGQifQ.G2QGjaJbWuqnD33HnDjI5VcCkuZx1NFcmzSbW9ZCQSQ
+token, _ := jwt.Parse()
+fmt.Println(token) // eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2p3dCIsInN1YiI6IkV4YW1wbGUgVG9rZW4ifQ.5UDIu1WUy20KEM_vGUBdYnOBDiwfA94_vYvE3cehGS8
 ```
 
 ### Custom Fields in the Token Payload
 - Custom fields can be applied to the JWT `Payload` by setting the `Custom` property to a map
 ```go
-jwt.Payload.Custom = map[string]interface{}{
-	"Hello": "World",
+jwt.Payload.Custom = gojwt.Map{
+	"string": "Example String",
+	"number": 1234,
 }
 ```
 
@@ -48,6 +50,7 @@ jwt.Payload.Custom = map[string]interface{}{
   - If the token has not been signed yet, the error `ErrTokNotSig` is returned
   - If an invalid secret was passed, the error `ErrInvSecKey` is returned
   - If the signature algorithm given in the JWT `Header` is not supported, the error `ErrAlgNotImp` is returned
+  - If the token has expired or is not valid yet based on the `ExpirationTime` and `NotBefore` claims, `ErrInvTokPer` is returned
 ```go
 err := jwt.Sign("mysecret")
 if err == nil {
@@ -81,8 +84,17 @@ if err == nil {
 - Parsed JWTs can be loaded by using the `NewJWT` function
   - If the given string is not a valid JWT, an error is returned
 ```go
-jwt, err := gojwt.NewJWT("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2p3dCIsIkhlbGxvIjoiV29ybGQifQ.G2QGjaJbWuqnD33HnDjI5VcCkuZx1NFcmzSbW9ZCQSQ")
+jwt, err := gojwt.LoadJWT("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2p3dCIsInN1YiI6IkV4YW1wbGUgVG9rZW4ifQ.5UDIu1WUy20KEM_vGUBdYnOBDiwfA94_vYvE3cehGS8")
 if err == nil {
 	fmt.Println("JWT successfully loaded!")
 }
+```
+
+### Token Timeouts
+- Tokens can have an expiration and a starting timestamp which is set using the `NotBefore` and `ExpirationTime` properties in the payload
+- Then the validation process automatically returns `ErrInvTokPer` if the timestamp in the `NotBefore` field has not passed yet or the `ExpirationTime` has passed
+- If these properties are not set, tokens are valid from the second they are signed on and do not expire
+```go
+jwt.Payload.NotBefore = gojwt.Now().Add(time.Second * 5)
+jwt.Payload.ExpirationTime = gojwt.Wrap(time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC))
 ```
