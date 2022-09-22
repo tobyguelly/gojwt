@@ -14,6 +14,10 @@ var (
 
 	// ErrBadJWTTok indicates that a given string is not a valid JWT token.
 	ErrBadJWTTok = errors.New("NOT A JWT / BAD JWT")
+
+	// ErrInvTokPrd indicates that a given JWT has failed a validation.
+	// This happened because of either the nbf (NotBefore) or exp (ExpirationTime) claim had invalid dates.
+	ErrInvTokPrd = errors.New("TOKEN VALIDITY PERIOD EXPIRED OR NOT STARTED")
 )
 
 var (

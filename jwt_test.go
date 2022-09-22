@@ -35,7 +35,7 @@ func TestNewJWT(t *testing.T) {
 		},
 	}
 	for i, test := range tests {
-		res, err := gojwt.NewJWT(test.Input)
+		res, err := gojwt.LoadJWT(test.Input)
 		if err != nil {
 			if test.ExpectedError != nil {
 				if test.ExpectedError == err {
@@ -436,8 +436,8 @@ func TestJWT_String(t *testing.T) {
 		},
 	}
 	for i, test := range tests {
-		res := test.Input.String()
-		if res == test.ExpectedOutput {
+		res, err := test.Input.Parse()
+		if err != nil || res == test.ExpectedOutput {
 			t.Logf("Passed %d/%d tests!", i+1, len(tests))
 		} else {
 			t.Errorf("Output and expected output did not match: %s\nFound:\t\t%s\nExpected:\t%s",

@@ -25,20 +25,25 @@ func main() {
 			Type:      gojwt.TypJWT,
 		},
 		Payload: gojwt.Payload{
-			Issuer: "gojwt",
+			Issuer:  "gojwt",
+			Subject: "Example Token",
 		},
 	}
 
-	jwt.Payload.Custom = map[string]interface{}{
-		"Hello": "World",
+	jwt.Payload.Custom = gojwt.Map{
+		"string": "Example String",
+		"number": 1234,
 	}
 
 	err = jwt.SignWithKey(label, publicKey)
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Println("Token successfully signed!")
 	}
 
-	fmt.Println(jwt.String())
+	token, err := jwt.Parse()
+	if err == nil {
+		fmt.Println(token)
+	}
 
 	err = jwt.ValidateWithKey(label, *privateKey)
 	if err == gojwt.ErrInvSecKey {

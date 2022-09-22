@@ -20,11 +20,21 @@ type JWT struct {
 	Signature string
 }
 
-// NewJWT creates a JWT object from a JWT string.
+// NewJWT creates a completely new JWT object with default values.
+func NewJWT() JWT {
+	return JWT{
+		Header: DefaultHeader,
+		Payload: Payload{
+			Issuer: "gojwt",
+		},
+	}
+}
+
+// LoadJWT creates a JWT object from a JWT string.
 // Returns empty JWT, ErrBadJWTTok if the JWT is not a valid JWT,
 // or returns the JWT if everything was successful.
-func NewJWT(jwt string) (JWT, error) {
-	res := JWT{}
+func LoadJWT(jwt string) (*JWT, error) {
+	res := &JWT{}
 	jwtParts := strings.Split(jwt, ".")
 	if len(jwtParts) != 3 {
 		return res, ErrBadJWTTok
@@ -53,7 +63,7 @@ func NewJWT(jwt string) (JWT, error) {
 	if err != nil {
 		return res, err
 	}
-	payload.applyFields(payloadMap)
+	payload.applyCustom(payloadMap)
 	res.Payload = payload
 	res.Signature = jwtParts[2]
 	return res, nil
@@ -64,9 +74,20 @@ func (j *JWT) IsEmpty() bool {
 	return j.Header.IsEmpty() && j.Payload.IsEmpty()
 }
 
+// IsSigned returns a bool, whether the token has been signed already or not.
+func (j *JWT) IsSigned() bool {
+	return j.Signature != ""
+}
+
+// IsExpired returns a bool, whether the token has already expired or is not valid yet.
+func (j *JWT) IsExpired() bool {
+	return (j.Payload.ExpirationTime != nil && j.Payload.ExpirationTime.Unix() <= Now().Unix()) ||
+		(j.Payload.NotBefore != nil && j.Payload.NotBefore.Unix() >= Now().Unix())
+}
+
 // Validate validates a JWT based on a given secret string using a symmetric encryption algorithm.
 // Returns ErrAlgNotImp if the algorithm in the Header is not implemented yet,
-// ErrTokNotSig if the token has not been signed yet,
+// ErrTokNotSig if the token has not been signed yet, ErrInvTokPrd if the token period has expired
 // and ErrInvSecKey if the entered secret string is invalid corresponding to the signature.
 // Returns nil if the JWT is validated with the entered secret.
 func (j *JWT) Validate(secret string) error {
@@ -78,7 +99,7 @@ func (j *JWT) Validate(secret string) error {
 	if !exists {
 		return ErrAlgNotImp
 	}
-	if j.Signature == "" {
+	if !j.IsSigned() {
 		return ErrTokNotSig
 	}
 	signature, err := algorithm(res, secret)
@@ -86,6 +107,9 @@ func (j *JWT) Validate(secret string) error {
 		return err
 	}
 	if signature == j.Signature {
+		if j.IsExpired() {
+			return ErrInvTokPrd
+		}
 		return nil
 	}
 	return ErrInvSecKey
@@ -93,7 +117,7 @@ func (j *JWT) Validate(secret string) error {
 
 // ValidateWithKey validates a JWT based on a given secret string using an asymmetric encryption algorithm
 // Returns ErrAlgNotImp if the algorithm in the Header is not implemented yet,
-// ErrTokNotSig if the token has not been signed yet,
+// ErrTokNotSig if the token has not been signed yet, ErrInvTokPrd if the token period has expired
 // and ErrInvSecKey if the entered key and/or label is invalid corresponding to the signature.
 // Returns nil if the JWT is validated with the entered key.
 func (j *JWT) ValidateWithKey(label string, key rsa.PrivateKey) error {
@@ -105,7 +129,7 @@ func (j *JWT) ValidateWithKey(label string, key rsa.PrivateKey) error {
 	if !exists {
 		return ErrAlgNotImp
 	}
-	if j.Signature == "" {
+	if !j.IsSigned() {
 		return ErrTokNotSig
 	}
 	result, err := algorithm(j.Signature, []byte(label), key)
@@ -113,6 +137,9 @@ func (j *JWT) ValidateWithKey(label string, key rsa.PrivateKey) error {
 		return err
 	}
 	if res == result {
+		if j.IsExpired() {
+			return ErrInvTokPrd
+		}
 		return nil
 	}
 	return ErrInvSecKey
@@ -120,7 +147,8 @@ func (j *JWT) ValidateWithKey(label string, key rsa.PrivateKey) error {
 
 // Sign signs a JWT using a symmetric encryption algorithm and creates the Signature,
 // saved in the JWT. This method overwrites the Signature field in the JWT if it exists.
-// Returns ErrAlgNotImp if the algorithm in the Header is not implemented yet.
+// Returns ErrAlgNotImp if the algorithm in the Header is not implemented yet or an asymmetric encryption algorithm.
+// or returns ErrInvTokPrd if the token period has expired before signing.
 func (j *JWT) Sign(secret string) error {
 	res, err := j.Data()
 	if err != nil {
@@ -136,7 +164,8 @@ func (j *JWT) Sign(secret string) error {
 
 // SignWithKey signs a JWT using an asymmetric encryption algorithm and creates the Signature,
 // saved in the JWT. This method overwrites the Signature field in the JWT if it exists.
-// Returns ErrAlgNotImp if the algorithm in the Header is not implemented yet.
+// Returns ErrAlgNotImp if the algorithm in the Header is not implemented yet or a symmetric encryption algorithm
+// or returns ErrInvTokPrd if the token period has expired before signing.
 func (j *JWT) SignWithKey(label string, key rsa.PublicKey) error {
 	res, err := j.Data()
 	if err != nil {
@@ -150,23 +179,31 @@ func (j *JWT) SignWithKey(label string, key rsa.PublicKey) error {
 	return err
 }
 
-// String formats the JWT into a JWT string and returns the result.
-// If the token has not been signed yet, a signature is created using the SignHS256 algorithm and no secret.
+// Parse formats the JWT into a JWT string and returns the result.
+// It requires the token to be signed and the payload and header
+// to be parsed successfully, otherwise it returns ErrTokNotSig.
 // Result = Base64Encode(Header.Json()) + "." + Base64Encode(Payload.Json()) + "." + Signature
-func (j *JWT) String() string {
-	data, _ := j.Data()
-	if j.Signature == "" {
-		algorithm := algorithms[j.Header.Algorithm]
-		if algorithm == nil {
-			algorithm = SignHS256
-		}
-		signature, err := algorithm(data, "")
-		if err != nil {
-			return data
-		}
-		j.Signature = signature
+func (j *JWT) Parse() (string, error) {
+	data, err := j.Data()
+	if err != nil {
+		return "", err
 	}
-	return data + "." + j.Signature
+	if !j.IsSigned() {
+		return "", ErrTokNotSig
+	}
+	return data + "." + j.Signature, nil
+}
+
+// String formats the JWT into a JWT string and ignores probable errors.
+// To parse tokens in production environments, it is recommended to use the Parse method.
+func (j JWT) String() string {
+	result, _ := j.Data()
+	return result
+}
+
+// GoString is the implementation for the GoStringer interface and an alias for String
+func (j JWT) GoString() string {
+	return j.String()
 }
 
 // Data formats the Header and Payload fields of a JWT into a string.
