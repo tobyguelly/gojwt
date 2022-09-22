@@ -93,6 +93,7 @@ if err == nil {
 ### Token Timeouts
 - Tokens can have an expiration and a starting timestamp which is set using the `NotBefore` and `ExpirationTime` properties in the payload
 - Then the validation process automatically returns `ErrInvTokPer` if the timestamp in the `NotBefore` field has not passed yet or the `ExpirationTime` has passed
+  - This error can be ignored, it is informational only
 - If these properties are not set, tokens are valid from the second they are signed on and do not expire
 ```go
 jwt.Payload.NotBefore = gojwt.Now().Add(time.Second * 5)

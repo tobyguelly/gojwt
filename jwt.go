@@ -102,14 +102,14 @@ func (j *JWT) Validate(secret string) error {
 	if !j.IsSigned() {
 		return ErrTokNotSig
 	}
-	if j.IsExpired() {
-		return ErrInvTokPrd
-	}
 	signature, err := algorithm(res, secret)
 	if err != nil {
 		return err
 	}
 	if signature == j.Signature {
+		if j.IsExpired() {
+			return ErrInvTokPrd
+		}
 		return nil
 	}
 	return ErrInvSecKey
@@ -132,14 +132,14 @@ func (j *JWT) ValidateWithKey(label string, key rsa.PrivateKey) error {
 	if !j.IsSigned() {
 		return ErrTokNotSig
 	}
-	if j.IsExpired() {
-		return ErrInvTokPrd
-	}
 	result, err := algorithm(j.Signature, []byte(label), key)
 	if err != nil && err != rsa.ErrDecryption {
 		return err
 	}
 	if res == result {
+		if j.IsExpired() {
+			return ErrInvTokPrd
+		}
 		return nil
 	}
 	return ErrInvSecKey
