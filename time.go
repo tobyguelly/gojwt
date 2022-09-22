@@ -17,7 +17,7 @@ func Now() *Time {
 	return Wrap(time.Now())
 }
 
-func loadTime(seconds int64) *Time {
+func Unix(seconds int64) *Time {
 	return Wrap(time.Unix(seconds, 0))
 }
 
@@ -35,7 +35,7 @@ func (t *Time) MarshalText() ([]byte, error) {
 
 func (t *Time) UnmarshalText(data []byte) error {
 	res, err := strconv.ParseInt(string(data), 10, 64)
-	t = loadTime(res)
+	t.Time = time.Unix(res, 0)
 	return err
 }
 

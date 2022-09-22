@@ -33,8 +33,8 @@ func NewJWT() JWT {
 // LoadJWT creates a JWT object from a JWT string.
 // Returns empty JWT, ErrBadJWTTok if the JWT is not a valid JWT,
 // or returns the JWT if everything was successful.
-func LoadJWT(jwt string) (JWT, error) {
-	res := JWT{}
+func LoadJWT(jwt string) (*JWT, error) {
+	res := &JWT{}
 	jwtParts := strings.Split(jwt, ".")
 	if len(jwtParts) != 3 {
 		return res, ErrBadJWTTok

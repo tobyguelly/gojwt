@@ -1,71 +1,38 @@
 package gojwt_test
 
 import (
-	"fmt"
 	"github.com/tobyguelly/gojwt"
 	"testing"
-	"time"
 )
 
-type UnitTests []struct {
-	Input  fmt.Stringer
-	Output fmt.Stringer
-}
-
-func (u UnitTests) Run(t *testing.T) {
-	for i, test := range u {
-		AssertEqual(t, test.Input, test.Output)
-		t.Logf("Test %d/%d successful!", i, len(u))
+func TestBuilder(t *testing.T) {
+	tests := []struct {
+		Input          *gojwt.Builder
+		Secret         string
+		ExpectedOutput string
+	}{
+		{
+			Input: gojwt.WithBuilder().
+				Issuer("testIssuer").
+				Subject("testSubject").
+				Audience("testAudience").
+				IssuedAt(gojwt.Unix(1)).
+				NotBefore(gojwt.Unix(2)).
+				ExpirationTime(gojwt.Unix(3)).
+				Custom("hello", "world").
+				JWTID("testId"),
+			Secret:         "1234",
+			ExpectedOutput: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJ0ZXN0SXNzdWVyIiwic3ViIjoidGVzdFN1YmplY3QiLCJhdWQiOiJ0ZXN0QXVkaWVuY2UiLCJleHAiOjMsIm5iZiI6MiwiaWF0IjoxLCJqdGkiOiJ0ZXN0SWQiLCJoZWxsbyI6IndvcmxkIn0._bEv_XNOP4zcqeKZZpWkbrkzcJDgER4m7PQ0Ivq-uEM",
+		},
 	}
-}
-
-type Wrapper struct {
-	value string
-}
-
-func Wrap(input string) Wrapper {
-	return Wrapper{value: input}
-}
-
-func (w Wrapper) String() string {
-	return w.value
-}
-
-func AssertEqual(t *testing.T, input fmt.Stringer, expected fmt.Stringer) {
-	if input.String() != expected.String() {
-		t.Error("Assertion Error: Value Difference\nValue 1:", input, "\b\nValue 2:", expected)
-		t.FailNow()
+	for i, test := range tests {
+		token, err := test.Input.Sign(test.Secret)
+		if token == test.ExpectedOutput {
+			t.Logf("Passed %d/%d tests!", i+1, len(tests))
+		} else {
+			t.Errorf("Output and expected output did not match: %s\nFound:\t\t%s\nExpected:\t%s",
+				err, token, test.ExpectedOutput,
+			)
+		}
 	}
-}
-
-func TestBuilder_Setters(t *testing.T) {
-	UnitTests{
-		{
-			Input:  gojwt.WithBuilder(),
-			Output: gojwt.NewJWT(),
-		},
-		{
-			Input: gojwt.WithBuilder().Issuer("Test Issuer").JWTID("123").Custom("user", "admin"),
-			Output: gojwt.JWT{
-				Header: gojwt.DefaultHeader,
-				Payload: gojwt.Payload{
-					Issuer: "Test Issuer",
-					JWTID:  "123",
-					Custom: gojwt.Map{
-						"user": "admin",
-					},
-				},
-			},
-		},
-		{
-			Input: gojwt.WithBuilder().ExpiresIn(time.Second * 10),
-			Output: gojwt.JWT{
-				Header: gojwt.DefaultHeader,
-				Payload: gojwt.Payload{
-					Issuer:         "gojwt",
-					ExpirationTime: gojwt.Now().Add(time.Second * 10),
-				},
-			},
-		},
-	}.Run(t)
 }
