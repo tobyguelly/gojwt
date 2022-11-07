@@ -6,7 +6,7 @@
 [![CodeFactor](https://www.codefactor.io/repository/github/tobyguelly/gojwt/badge)](https://www.codefactor.io/repository/github/tobyguelly/gojwt)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](https://raw.githubusercontent.com/tobyguelly/gojwt/main/LICENSE)
 
-GoJWT is a simple and lightweight library for creating, formatting, manipulating, signing and validating [JSON Web Tokens](https://jwt.io) in Golang, used for token-based authorization. Specified in [RFC 7519](https://datatracker.ietf.org/doc/html/rfc7519)
+GoJWT is a simple and lightweight library for creating, formatting, manipulating, signing and validating [JSON Web Tokens](https://jwt.io) in Golang, used for token-based authorization. As specified in [RFC 7519](https://datatracker.ietf.org/doc/html/rfc7519), this library provides standard encryption algorithms and claim checks.
 
 ## Installation
 ```
@@ -26,7 +26,7 @@ jwt := gojwt.JWT {
 	Header:  gojwt.DefaultHeader,
 	Payload: gojwt.Payload {
 		Issuer:  "gojwt",
-        Subject: "Example Token",
+        	Subject: "Example Token",
 	},
 }
 token, _ := jwt.Parse()
@@ -81,7 +81,7 @@ if err == nil {
 ```
 
 ### Loading Tokens
-- Parsed JWTs can be loaded by using the `NewJWT` function
+- Parsed JWTs can be loaded by using the `LoadJWT` function
   - If the given string is not a valid JWT, an error is returned
 ```go
 jwt, err := gojwt.LoadJWT("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2p3dCIsInN1YiI6IkV4YW1wbGUgVG9rZW4ifQ.5UDIu1WUy20KEM_vGUBdYnOBDiwfA94_vYvE3cehGS8")
