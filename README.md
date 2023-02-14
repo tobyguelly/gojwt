@@ -1,7 +1,7 @@
 # GoJWT - JSON Web Tokens in Go
 [![GoReportCard](https://goreportcard.com/badge/github.com/tobyguelly/gojwt)](https://goreportcard.com/report/github.com/tobyguelly/gojwt)
 [![GoDoc](https://godoc.org/github.com/tobyguelly/gojwt?status.svg)](https://godoc.org/github.com/tobyguelly/gojwt)
-![BuildStatus](https://img.shields.io/github/workflow/status/tobyguelly/gojwt/Run%20Unit%20Tests)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/tobyguelly/gojwt/test.yml)](https://github.com/tobyguelly/gojwt/actions)
 [![Code Coverage](https://gocover.io/_badge/github.com/tobyguelly/gojwt)](https://gocover.io/github.com/tobyguelly/gojwt)
 [![CodeFactor](https://www.codefactor.io/repository/github/tobyguelly/gojwt/badge)](https://www.codefactor.io/repository/github/tobyguelly/gojwt)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](https://raw.githubusercontent.com/tobyguelly/gojwt/main/LICENSE)
