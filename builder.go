@@ -75,7 +75,7 @@ func (g *Builder) JWTID(jti string) *Builder {
 }
 
 // Custom sets a custom property in the JWT.
-func (g *Builder) Custom(key, value string) *Builder {
+func (g *Builder) Custom(key string, value interface{}) *Builder {
 	g.JWT.Payload.SetCustom(key, value)
 	return g
 }
