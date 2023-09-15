@@ -3,6 +3,7 @@ package gojwt
 import (
 	"crypto/rsa"
 	"encoding/json"
+	"errors"
 	"strings"
 )
 
@@ -33,9 +34,9 @@ func NewJWT() JWT {
 // LoadJWT creates a JWT object from a JWT string.
 // Returns empty JWT, ErrBadJWTTok if the JWT is not a valid JWT,
 // or returns the JWT if everything was successful.
-func LoadJWT(jwt string) (*JWT, error) {
+func LoadJWT(token string) (jwt *JWT, err error) {
 	res := &JWT{}
-	jwtParts := strings.Split(jwt, ".")
+	jwtParts := strings.Split(token, ".")
 	if len(jwtParts) != 3 {
 		return res, ErrBadJWTTok
 	}
@@ -70,19 +71,19 @@ func LoadJWT(jwt string) (*JWT, error) {
 }
 
 // IsEmpty returns a bool, whether the Header and the Payload are empty or not.
-func (j *JWT) IsEmpty() bool {
-	return j.Header.IsEmpty() && j.Payload.IsEmpty()
+func (this *JWT) IsEmpty() (empty bool) {
+	return this.Header.IsEmpty() && this.Payload.IsEmpty()
 }
 
 // IsSigned returns a bool, whether the token has been signed already or not.
-func (j *JWT) IsSigned() bool {
-	return j.Signature != ""
+func (this *JWT) IsSigned() (signed bool) {
+	return this.Signature != ""
 }
 
 // IsExpired returns a bool, whether the token has already expired or is not valid yet.
-func (j *JWT) IsExpired() bool {
-	return (j.Payload.ExpirationTime != nil && j.Payload.ExpirationTime.Unix() <= Now().Unix()) ||
-		(j.Payload.NotBefore != nil && j.Payload.NotBefore.Unix() >= Now().Unix())
+func (this *JWT) IsExpired() (expired bool) {
+	return (this.Payload.ExpirationTime != nil && this.Payload.ExpirationTime.Unix() <= Now().Unix()) ||
+		(this.Payload.NotBefore != nil && this.Payload.NotBefore.Unix() >= Now().Unix())
 }
 
 // Validate validates a JWT based on a given secret string using a symmetric encryption algorithm.
@@ -90,24 +91,24 @@ func (j *JWT) IsExpired() bool {
 // ErrTokNotSig if the token has not been signed yet, ErrInvTokPrd if the token period has expired
 // and ErrInvSecKey if the entered secret string is invalid corresponding to the signature.
 // Returns nil if the JWT is validated with the entered secret.
-func (j *JWT) Validate(secret string) error {
-	res, err := j.Data()
+func (this *JWT) Validate(secret string) (err error) {
+	res, err := this.Data()
 	if err != nil {
 		return err
 	}
-	algorithm, exists := algorithms[j.Header.Algorithm]
+	algorithm, exists := Algorithms[this.Header.Algorithm]
 	if !exists {
 		return ErrAlgNotImp
 	}
-	if !j.IsSigned() {
+	if !this.IsSigned() {
 		return ErrTokNotSig
 	}
 	signature, err := algorithm(res, secret)
 	if err != nil {
 		return err
 	}
-	if signature == j.Signature {
-		if j.IsExpired() {
+	if signature == this.Signature {
+		if this.IsExpired() {
 			return ErrInvTokPrd
 		}
 		return nil
@@ -120,24 +121,27 @@ func (j *JWT) Validate(secret string) error {
 // ErrTokNotSig if the token has not been signed yet, ErrInvTokPrd if the token period has expired
 // and ErrInvSecKey if the entered key and/or label is invalid corresponding to the signature.
 // Returns nil if the JWT is validated with the entered key.
-func (j *JWT) ValidateWithKey(label string, key rsa.PrivateKey) error {
-	res, err := j.Data()
+func (this *JWT) ValidateWithKey(label string, key rsa.PrivateKey) (err error) {
+	res, err := this.Data()
 	if err != nil {
 		return err
 	}
-	algorithm, exists := decryptionAlgorithms[j.Header.Algorithm]
+	algorithm, exists := DecryptionAlgorithms[this.Header.Algorithm]
 	if !exists {
 		return ErrAlgNotImp
 	}
-	if !j.IsSigned() {
+	if !this.IsSigned() {
 		return ErrTokNotSig
 	}
-	result, err := algorithm(j.Signature, []byte(label), key)
-	if err != nil && err != rsa.ErrDecryption {
+	result, err := algorithm(this.Signature, []byte(label), key)
+	if err != nil {
+		if errors.Is(err, rsa.ErrDecryption) {
+			return ErrInvSecKey
+		}
 		return err
 	}
 	if res == result {
-		if j.IsExpired() {
+		if this.IsExpired() {
 			return ErrInvTokPrd
 		}
 		return nil
@@ -149,16 +153,16 @@ func (j *JWT) ValidateWithKey(label string, key rsa.PrivateKey) error {
 // saved in the JWT. This method overwrites the Signature field in the JWT if it exists.
 // Returns ErrAlgNotImp if the algorithm in the Header is not implemented yet or an asymmetric encryption algorithm.
 // or returns ErrInvTokPrd if the token period has expired before signing.
-func (j *JWT) Sign(secret string) error {
-	res, err := j.Data()
+func (this *JWT) Sign(secret string) (err error) {
+	res, err := this.Data()
 	if err != nil {
 		return err
 	}
-	algorithm, exists := algorithms[j.Header.Algorithm]
+	algorithm, exists := Algorithms[this.Header.Algorithm]
 	if !exists {
 		return ErrAlgNotImp
 	}
-	j.Signature, err = algorithm(res, secret)
+	this.Signature, err = algorithm(res, secret)
 	return err
 }
 
@@ -166,16 +170,16 @@ func (j *JWT) Sign(secret string) error {
 // saved in the JWT. This method overwrites the Signature field in the JWT if it exists.
 // Returns ErrAlgNotImp if the algorithm in the Header is not implemented yet or a symmetric encryption algorithm
 // or returns ErrInvTokPrd if the token period has expired before signing.
-func (j *JWT) SignWithKey(label string, key rsa.PublicKey) error {
-	res, err := j.Data()
+func (this *JWT) SignWithKey(label string, key rsa.PublicKey) (err error) {
+	res, err := this.Data()
 	if err != nil {
 		return err
 	}
-	algorithm, exists := encryptionAlgorithms[j.Header.Algorithm]
+	algorithm, exists := EncryptionAlgorithms[this.Header.Algorithm]
 	if !exists {
 		return ErrAlgNotImp
 	}
-	j.Signature, err = algorithm(res, []byte(label), key)
+	this.Signature, err = algorithm(res, []byte(label), key)
 	return err
 }
 
@@ -183,37 +187,55 @@ func (j *JWT) SignWithKey(label string, key rsa.PublicKey) error {
 // It requires the token to be signed and the payload and header
 // to be parsed successfully, otherwise it returns ErrTokNotSig.
 // Result = Base64Encode(Header.Json()) + "." + Base64Encode(Payload.Json()) + "." + Signature
-func (j *JWT) Parse() (string, error) {
-	data, err := j.Data()
+func (this *JWT) Parse() (token string, err error) {
+	data, err := this.Data()
 	if err != nil {
 		return "", err
 	}
-	if !j.IsSigned() {
+	if !this.IsSigned() {
 		return "", ErrTokNotSig
 	}
-	return data + "." + j.Signature, nil
+	return data + "." + this.Signature, nil
 }
 
 // String formats the JWT into a JWT string and ignores probable errors.
 // To parse tokens in production environments, it is recommended to use the Parse method.
-func (j JWT) String() string {
-	result, _ := j.Data()
+func (this *JWT) String() (token string) {
+	result, _ := this.Parse()
 	return result
 }
 
 // GoString is the implementation for the GoStringer interface and an alias for String
-func (j JWT) GoString() string {
-	return j.String()
+func (this *JWT) GoString() (token string) {
+	return this.String()
+}
+
+// SignParse performs the Sign and Parse operations in one single step.
+func (this *JWT) SignParse(secret string) (token string, err error) {
+	err = this.Sign(secret)
+	if err != nil {
+		return "", err
+	}
+	return this.Parse()
+}
+
+// SignParseWithKey performs the SignWithKey and Parse operations in one single step.
+func (this *JWT) SignParseWithKey(label string, key rsa.PublicKey) (token string, err error) {
+	err = this.SignWithKey(label, key)
+	if err != nil {
+		return "", err
+	}
+	return this.Parse()
 }
 
 // Data formats the Header and Payload fields of a JWT into a string.
 // Result = Base64Encode(Header.Json()) + "." + Base64Encode(Payload.Json())
-func (j *JWT) Data() (string, error) {
-	header, err := j.Header.Json()
+func (this *JWT) Data() (data string, err error) {
+	header, err := this.Header.Json()
 	if err != nil {
 		return "", err
 	}
-	payload, err := j.Payload.Json()
+	payload, err := this.Payload.Json()
 	if err != nil {
 		return "", err
 	}

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"github.com/tobyguelly/gojwt"
 	"time"
@@ -22,7 +23,7 @@ func main() {
 	}
 
 	err = jwt.Validate(secret)
-	if err == gojwt.ErrInvTokPrd {
+	if errors.Is(err, gojwt.ErrInvTokPrd) {
 		fmt.Println("Token is not valid yet!")
 	}
 
@@ -36,7 +37,7 @@ func main() {
 	time.Sleep(time.Second * 7)
 
 	err = jwt.Validate(secret)
-	if err == gojwt.ErrInvTokPrd {
+	if errors.Is(err, gojwt.ErrInvTokPrd) {
 		fmt.Println("Token has expired now!")
 	}
 }

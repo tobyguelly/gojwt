@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/rand"
 	"crypto/rsa"
+	"errors"
 	"fmt"
 	"github.com/tobyguelly/gojwt"
 )
@@ -46,9 +47,9 @@ func main() {
 	}
 
 	err = jwt.ValidateWithKey(label, *privateKey)
-	if err == gojwt.ErrInvSecKey {
+	if errors.Is(err, gojwt.ErrInvSecKey) {
 		fmt.Println("Invalid secret!")
-	} else if err == gojwt.ErrTokNotSig {
+	} else if errors.Is(err, gojwt.ErrTokNotSig) {
 		fmt.Println("Token has not been signed!")
 	} else if err == nil {
 		fmt.Println("Signature does match!")
