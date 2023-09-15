@@ -36,37 +36,37 @@ type Payload struct {
 }
 
 // IsEmpty returns a bool, whether the Payload is empty or not.
-func (p *Payload) IsEmpty() bool {
+func (this *Payload) IsEmpty() bool {
 	empty := Payload{}
-	resThis, _ := p.Json()
+	resThis, _ := this.Json()
 	resEmpty, _ := empty.Json()
 	return resThis == resEmpty
 }
 
 // SetCustom sets a key and a value in the Map values.
-func (p *Payload) SetCustom(key string, value interface{}) *Payload {
-	if p.Custom == nil {
-		p.Custom = make(map[string]interface{})
+func (this *Payload) SetCustom(key string, value interface{}) *Payload {
+	if this.Custom == nil {
+		this.Custom = make(map[string]interface{})
 	}
-	p.Custom[key] = value
-	return p
+	this.Custom[key] = value
+	return this
 }
 
 // GetCustom returns a field in the Map values, identified by the key.
-func (p *Payload) GetCustom(key string) interface{} {
-	return p.Custom[key]
+func (this *Payload) GetCustom(key string) interface{} {
+	return this.Custom[key]
 }
 
 // Json formats the Payload into JSON format.
-func (p *Payload) Json() (string, error) {
-	preRes, err := json.Marshal(p)
+func (this *Payload) Json() (string, error) {
+	preRes, err := json.Marshal(this)
 	if err != nil {
 		return "", err
 	}
 	data := string(preRes)
-	if len(p.Custom) > 0 {
+	if len(this.Custom) > 0 {
 		data = strings.TrimSuffix(data, "}")
-		res, err := json.Marshal(p.Custom)
+		res, err := json.Marshal(this.Custom)
 		if err != nil {
 			return "", err
 		}
@@ -78,11 +78,11 @@ func (p *Payload) Json() (string, error) {
 	return data, err
 }
 
-func (p *Payload) applyCustom(fields map[string]interface{}) {
+func (this *Payload) applyCustom(fields map[string]interface{}) {
 	if len(fields) > 0 {
 		for key, value := range fields {
 			if _, exists := defaultFields[key]; !exists {
-				p.SetCustom(key, value)
+				this.SetCustom(key, value)
 			}
 		}
 	}

@@ -10,18 +10,24 @@ import (
 	"hash"
 )
 
+type (
+	AlgorithmMap           map[string]func(message, secret string) (string, error)
+	EncryptionAlgorithmMap map[string]func(message string, label []byte, key rsa.PublicKey) (string, error)
+	DecryptionAlgorithmMap map[string]func(message string, label []byte, key rsa.PrivateKey) (string, error)
+)
+
 var (
-	algorithms = map[string]func(message, secret string) (string, error){
+	Algorithms = AlgorithmMap{
 		AlgHS256: SignHS256,
 		AlgHS384: SignHS384,
 		AlgHS512: SignHS512,
 	}
-	encryptionAlgorithms = map[string]func(message string, label []byte, key rsa.PublicKey) (string, error){
+	EncryptionAlgorithms = EncryptionAlgorithmMap{
 		AlgRS256: EncryptRS256,
 		AlgRS384: EncryptRS384,
 		AlgRS512: EncryptRS512,
 	}
-	decryptionAlgorithms = map[string]func(message string, label []byte, key rsa.PrivateKey) (string, error){
+	DecryptionAlgorithms = DecryptionAlgorithmMap{
 		AlgRS256: DecryptRS256,
 		AlgRS384: DecryptRS384,
 		AlgRS512: DecryptRS512,

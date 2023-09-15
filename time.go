@@ -30,39 +30,39 @@ func Unix(seconds int64) *Time {
 }
 
 // Add adds a time.Duration to a Time.
-func (t *Time) Add(duration time.Duration) *Time {
-	t.Time = t.Time.Add(duration)
-	return t
+func (this *Time) Add(duration time.Duration) *Time {
+	this.Time = this.Time.Add(duration)
+	return this
 }
 
 // MarshalText is the implementation of the encoding.TextMarshaler interface.
 // It parses the Time value into a UNIX-Timestamp.
-func (t *Time) MarshalText() ([]byte, error) {
-	if t.Time.IsZero() {
+func (this *Time) MarshalText() ([]byte, error) {
+	if this.Time.IsZero() {
 		return []byte("null"), nil
 	}
-	return []byte(strconv.FormatInt(t.Time.Unix(), 10)), nil
+	return []byte(strconv.FormatInt(this.Time.Unix(), 10)), nil
 }
 
 // UnmarshalText is the implementation of the encoding.TextUnmarshaler interface.
 // It parses an UNIX-Timestamp into a Time value.
-func (t *Time) UnmarshalText(data []byte) error {
+func (this *Time) UnmarshalText(data []byte) error {
 	res, err := strconv.ParseInt(string(data), 10, 64)
-	t.Time = time.Unix(res, 0)
+	this.Time = time.Unix(res, 0)
 	return err
 }
 
 // MarshalJSON is the implementation of the json.Marshaler interface.
 // It parses the Time value into a UNIX-Timestamp.
-func (t *Time) MarshalJSON() ([]byte, error) {
-	return t.MarshalText()
+func (this *Time) MarshalJSON() ([]byte, error) {
+	return this.MarshalText()
 }
 
 // UnmarshalJSON is the implementation of the json.Unmarshaler interface.
 // It parses an UNIX-Timestamp into a Time value.
-func (t *Time) UnmarshalJSON(data []byte) error {
+func (this *Time) UnmarshalJSON(data []byte) error {
 	if string(data) == "null" {
 		return nil
 	}
-	return t.UnmarshalText(data)
+	return this.UnmarshalText(data)
 }

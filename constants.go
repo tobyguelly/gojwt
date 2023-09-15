@@ -18,6 +18,9 @@ var (
 	// ErrInvTokPrd indicates that a given JWT has failed a validation.
 	// This happened because of either the nbf (NotBefore) or exp (ExpirationTime) claim had invalid dates.
 	ErrInvTokPrd = errors.New("TOKEN VALIDITY PERIOD EXPIRED OR NOT STARTED")
+
+	// ErrPayFieldVal indicates that a given payload has failed field format validation.
+	ErrPayFieldVal = errors.New("ONE OR MORE FIELDS PRODUCE A VALIDATION ERROR")
 )
 
 var (
@@ -26,6 +29,8 @@ var (
 		Algorithm: AlgHS256,
 		Type:      TypJWT,
 	}
+	// DefaultFieldLength is the default maximum length of payload fields.
+	DefaultFieldLength = 255 // TODO
 )
 
 var (

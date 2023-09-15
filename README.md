@@ -2,9 +2,9 @@
 [![GoReportCard](https://goreportcard.com/badge/github.com/tobyguelly/gojwt)](https://goreportcard.com/report/github.com/tobyguelly/gojwt)
 [![GoDoc](https://godoc.org/github.com/tobyguelly/gojwt?status.svg)](https://godoc.org/github.com/tobyguelly/gojwt)
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/tobyguelly/gojwt/test.yml)](https://github.com/tobyguelly/gojwt/actions)
-[![Code Coverage](https://gocover.io/_badge/github.com/tobyguelly/gojwt)](https://gocover.io/github.com/tobyguelly/gojwt)
 [![CodeFactor](https://www.codefactor.io/repository/github/tobyguelly/gojwt/badge)](https://www.codefactor.io/repository/github/tobyguelly/gojwt)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](https://raw.githubusercontent.com/tobyguelly/gojwt/main/LICENSE)
+<!--- [![Code Coverage](https://gocover.io/_badge/github.com/tobyguelly/gojwt)](https://gocover.io/github.com/tobyguelly/gojwt) --->
 
 GoJWT is a simple and lightweight library for creating, formatting, manipulating, signing and validating [JSON Web Tokens](https://jwt.io) in Golang, used for token-based authorization. As specified in [RFC 7519](https://datatracker.ietf.org/doc/html/rfc7519), this library provides standard encryption algorithms and claim checks.
 
@@ -19,18 +19,22 @@ go get -u github.com/tobyguelly/gojwt
 ## Examples
 
 ### Creating JWTs
-- You can create JWTs using the `JWT` struct
-- Then you can format them into a JWT using the `Parse()` method
+- You can create JWTs using the `NewJWT` function
+- Then you can format and sign them into a JWT using the `SignParse()` method
 ```go
-jwt := gojwt.JWT {
-	Header:  gojwt.DefaultHeader,
-	Payload: gojwt.Payload {
-		Issuer:  "gojwt",
-        	Subject: "Example Token",
-	},
+jwt := gojwt.NewJWT()
+jwt.Payload.SetCustom("username", "admin")
+token, err := jwt.SignParse("mysecret")
+if err != nil {
+    fmt.Println(token)
 }
-token, _ := jwt.Parse()
-fmt.Println(token) // eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2p3dCIsInN1YiI6IkV4YW1wbGUgVG9rZW4ifQ.5UDIu1WUy20KEM_vGUBdYnOBDiwfA94_vYvE3cehGS8
+```
+- Alternatively you can use JWT builders to create tokens more easily
+```go
+token, err := gojwt.WithBuilder().Custom("username", "admin").ExpiresIn(time.Second * 10).Sign("mysecret")
+if err == nil {
+    fmt.Println(token)
+}
 ```
 
 ### Custom Fields in the Token Payload

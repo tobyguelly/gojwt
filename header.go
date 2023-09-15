@@ -16,12 +16,12 @@ type Header struct {
 }
 
 // IsEmpty returns a bool, whether the Header is empty or not.
-func (h *Header) IsEmpty() bool {
-	return h.Algorithm == "" && h.Type == "" && h.ContentType == ""
+func (this *Header) IsEmpty() bool {
+	return this.Algorithm == "" && this.Type == "" && this.ContentType == ""
 }
 
 // Json formats the Header into JSON format.
-func (h *Header) Json() (string, error) {
-	res, err := json.Marshal(h)
+func (this *Header) Json() (string, error) {
+	res, err := json.Marshal(this)
 	return string(res), err
 }

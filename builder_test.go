@@ -3,6 +3,7 @@ package gojwt_test
 import (
 	"github.com/tobyguelly/gojwt"
 	"testing"
+	"time"
 )
 
 func TestBuilder(t *testing.T) {
@@ -16,13 +17,13 @@ func TestBuilder(t *testing.T) {
 				Issuer("testIssuer").
 				Subject("testSubject").
 				Audience("testAudience").
-				IssuedAt(gojwt.Unix(1)).
-				NotBefore(gojwt.Unix(2)).
-				ExpirationTime(gojwt.Unix(3)).
+				IssuedAt(time.Unix(0, 0)).
+				NotBefore(time.Unix(1, 0)).
+				ExpirationTime(time.Unix(2, 0)).
 				Custom("hello", "world").
 				JWTID("testId"),
 			Secret:         "1234",
-			ExpectedOutput: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJ0ZXN0SXNzdWVyIiwic3ViIjoidGVzdFN1YmplY3QiLCJhdWQiOiJ0ZXN0QXVkaWVuY2UiLCJleHAiOjMsIm5iZiI6MiwiaWF0IjoxLCJqdGkiOiJ0ZXN0SWQiLCJoZWxsbyI6IndvcmxkIn0._bEv_XNOP4zcqeKZZpWkbrkzcJDgER4m7PQ0Ivq-uEM",
+			ExpectedOutput: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJ0ZXN0SXNzdWVyIiwic3ViIjoidGVzdFN1YmplY3QiLCJhdWQiOiJ0ZXN0QXVkaWVuY2UiLCJleHAiOjIsIm5iZiI6MSwiaWF0IjowLCJqdGkiOiJ0ZXN0SWQiLCJoZWxsbyI6IndvcmxkIn0.z0b6-9OgddsRwxwAR8dB3Y4Ud-rG1-sbpN_3xUmy-uI",
 		},
 	}
 	for i, test := range tests {
