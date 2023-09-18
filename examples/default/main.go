@@ -24,13 +24,9 @@ func main() {
 		"number": 1234,
 	}
 
-	err := jwt.Sign(secret)
+	token, err := jwt.SignParse(secret)
 	if err == nil {
 		fmt.Println("Token successfully signed!")
-	}
-
-	token, err := jwt.Parse()
-	if err == nil {
 		fmt.Println(token)
 	}
 

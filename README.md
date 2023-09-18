@@ -25,13 +25,16 @@ go get -u github.com/tobyguelly/gojwt
 jwt := gojwt.NewJWT()
 jwt.Payload.SetCustom("username", "admin")
 token, err := jwt.SignParse("mysecret")
-if err != nil {
+if err == nil {
     fmt.Println(token)
 }
 ```
 - Alternatively you can use JWT builders to create tokens more easily
 ```go
-token, err := gojwt.WithBuilder().Custom("username", "admin").ExpiresIn(time.Second * 10).Sign("mysecret")
+token, err := gojwt.WithBuilder().
+    Custom("username", "admin").
+    ExpiresIn(time.Second * 10).
+    Sign(secret)
 if err == nil {
     fmt.Println(token)
 }

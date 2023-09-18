@@ -15,7 +15,7 @@ func main() {
 	jwt := gojwt.NewJWT()
 
 	jwt.Payload.NotBefore = gojwt.Now().Add(time.Second * 5)
-	jwt.Payload.ExpirationTime = gojwt.Wrap(time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC))
+	jwt.Payload.ExpirationTime = gojwt.Now().Add(time.Second * 10)
 
 	err := jwt.Sign(secret)
 	if err == nil {
