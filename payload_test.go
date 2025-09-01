@@ -1,8 +1,9 @@
 package gojwt_test
 
 import (
-	"github.com/tobyguelly/gojwt"
 	"testing"
+
+	"github.com/tobyguelly/gojwt"
 )
 
 func TestPayload_IsEmpty(t *testing.T) {

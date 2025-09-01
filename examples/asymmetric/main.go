@@ -5,20 +5,13 @@ import (
 	"crypto/rsa"
 	"errors"
 	"fmt"
+
 	"github.com/tobyguelly/gojwt"
 )
 
-const (
-	label = "123456"
-	bits  = 2048
-)
-
 func main() {
-	privateKey, err := rsa.GenerateKey(rand.Reader, bits)
-	publicKey := privateKey.PublicKey
-	if err != nil {
-		fmt.Println(err.Error())
-	}
+	privateKey, _ := rsa.GenerateKey(rand.Reader, 2048)
+	publicKey := &privateKey.PublicKey
 
 	jwt := gojwt.JWT{
 		Header: gojwt.Header{
@@ -36,13 +29,13 @@ func main() {
 		"number": 1234,
 	}
 
-	token, err := jwt.SignParseWithKey(label, publicKey)
+	token, err := jwt.SignParseWithKey(privateKey)
 	if err != nil {
 		fmt.Println("Token successfully signed!")
 		fmt.Println(token)
 	}
 
-	err = jwt.ValidateWithKey(label, *privateKey)
+	err = jwt.ValidateWithKey(publicKey)
 	if errors.Is(err, gojwt.ErrInvSecKey) {
 		fmt.Println("Invalid secret!")
 	} else if errors.Is(err, gojwt.ErrTokNotSig) {

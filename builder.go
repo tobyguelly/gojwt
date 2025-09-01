@@ -90,10 +90,10 @@ func (this *Builder) Sign(secret string) (string, error) {
 	return this.JWT.Parse()
 }
 
-// SignWithKey signs the JWT with a given label and rsa.PublicKey and returns
+// SignWithKey signs the JWT with a rsa.PrivateKey and returns
 // the signed JWT as a string or a possible error.
-func (this *Builder) SignWithKey(label string, key rsa.PublicKey) (string, error) {
-	err := this.JWT.SignWithKey(label, key)
+func (this *Builder) SignWithKey(privateKey *rsa.PrivateKey) (string, error) {
+	err := this.JWT.SignWithKey(privateKey)
 	if err != nil {
 		return "", err
 	}

@@ -3,14 +3,14 @@ package gojwt_test
 import (
 	"crypto/rand"
 	"crypto/rsa"
-	"github.com/tobyguelly/gojwt"
 	"testing"
+
+	"github.com/tobyguelly/gojwt"
 )
 
 const (
 	bits   = 2048
 	secret = "1234"
-	label  = ""
 )
 
 func BenchmarkJWT_Sign(b *testing.B) {
@@ -44,7 +44,7 @@ func BenchmarkJWT_SignWithKey(b *testing.B) {
 		},
 	}
 	for i := 0; i < b.N; i++ {
-		err = jwt.SignWithKey(label, privateKey.PublicKey)
+		err = jwt.SignWithKey(privateKey)
 		if err != nil {
 			b.Errorf("Failed benchmark while signing: %s", err.Error())
 			b.FailNow()
@@ -88,13 +88,13 @@ func BenchmarkJWT_ValidateWithKey(b *testing.B) {
 			Issuer: "gojwt",
 		},
 	}
-	err = jwt.SignWithKey(label, privateKey.PublicKey)
+	err = jwt.SignWithKey(privateKey)
 	if err != nil {
 		b.Errorf("Failed benchmark while signing: %s", err.Error())
 		b.FailNow()
 	}
 	for i := 0; i < b.N; i++ {
-		err = jwt.ValidateWithKey(label, *privateKey)
+		err = jwt.ValidateWithKey(&privateKey.PublicKey)
 		if err != nil {
 			b.Errorf("Failed benchmark while validating: %s", err.Error())
 			b.FailNow()

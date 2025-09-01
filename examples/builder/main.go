@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/tobyguelly/gojwt"
 	"time"
+
+	"github.com/tobyguelly/gojwt"
 )
 
 const (

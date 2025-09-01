@@ -1,9 +1,10 @@
 package gojwt_test
 
 import (
-	"github.com/tobyguelly/gojwt"
 	"testing"
 	"time"
+
+	"github.com/tobyguelly/gojwt"
 )
 
 func TestBuilder(t *testing.T) {

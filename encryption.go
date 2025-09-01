@@ -1,19 +1,21 @@
 package gojwt
 
 import (
+	"crypto"
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/base64"
+	"fmt"
 	"hash"
 )
 
 type (
 	AlgorithmMap           map[string]func(message, secret string) (string, error)
-	EncryptionAlgorithmMap map[string]func(message string, label []byte, key rsa.PublicKey) (string, error)
-	DecryptionAlgorithmMap map[string]func(message string, label []byte, key rsa.PrivateKey) (string, error)
+	SigningAlgorithmMap    map[string]func(message string, privateKey *rsa.PrivateKey) (string, error)
+	ValidationAlgorithmMap map[string]func(message string, signature string, publicKey *rsa.PublicKey) error
 )
 
 var (
@@ -22,15 +24,15 @@ var (
 		AlgHS384: SignHS384,
 		AlgHS512: SignHS512,
 	}
-	EncryptionAlgorithms = EncryptionAlgorithmMap{
-		AlgRS256: EncryptRS256,
-		AlgRS384: EncryptRS384,
-		AlgRS512: EncryptRS512,
+	SigningAlgorithms = SigningAlgorithmMap{
+		AlgRS256: SignRS256,
+		AlgRS384: SignRS384,
+		AlgRS512: SignRS512,
 	}
-	DecryptionAlgorithms = DecryptionAlgorithmMap{
-		AlgRS256: DecryptRS256,
-		AlgRS384: DecryptRS384,
-		AlgRS512: DecryptRS512,
+	ValidationAlgorithms = ValidationAlgorithmMap{
+		AlgRS256: ValidateRS256,
+		AlgRS384: ValidateRS384,
+		AlgRS512: ValidateRS512,
 	}
 )
 
@@ -72,58 +74,66 @@ func SignHS512(message, secret string) (string, error) {
 	return signHS(sha512.New, message, secret)
 }
 
-func encryptRS(hash hash.Hash, message string, label []byte, publicKey rsa.PublicKey) (string, error) {
-	cipher, err := rsa.EncryptOAEP(hash, rand.Reader, &publicKey, []byte(message), label)
+func signRS(hash crypto.Hash, message string, privateKey *rsa.PrivateKey) (string, error) {
+	if !hash.Available() {
+		return "", fmt.Errorf("hash %v not available", hash)
+	}
+	h := hash.New()
+	_, _ = h.Write([]byte(message))
+	digest := h.Sum(nil)
+	signature, err := rsa.SignPKCS1v15(rand.Reader, privateKey, hash, digest)
 	if err != nil {
 		return "", err
 	}
-	return EncodeBase64(string(cipher)), nil
+	return EncodeBase64(string(signature)), nil
 }
 
-func decryptRS(hash hash.Hash, encodedCipher string, label []byte, privateKey rsa.PrivateKey) (string, error) {
-	cipher, err := DecodeBase64(encodedCipher)
-	if err != nil {
-		return "", err
+func validateRS(hash crypto.Hash, message string, signature string, publicKey *rsa.PublicKey) error {
+	if !hash.Available() {
+		return fmt.Errorf("hash %v not available", hash)
 	}
-	plaintext, err := rsa.DecryptOAEP(hash, rand.Reader, &privateKey, cipher, label)
+	h := hash.New()
+	_, _ = h.Write([]byte(message))
+	digest := h.Sum(nil)
+	decoded, err := DecodeBase64(signature)
 	if err != nil {
-		return "", err
+		return err
 	}
-	return string(plaintext), nil
+	return rsa.VerifyPKCS1v15(publicKey, hash, digest, decoded)
 }
 
-// EncryptRS256 signs a message string with a secret string and an RSA public key using the RS256 algorithm
-// with additional base64 rawURLEncoding of the result cipher.
-func EncryptRS256(message string, label []byte, publicKey rsa.PublicKey) (string, error) {
-	return encryptRS(sha256.New(), message, label, publicKey)
+// SignRS256 signs a message string with an RSA private key using the RS256 algorithm
+// with additional base64 rawURLEncoding of the result signature.
+func SignRS256(message string, privateKey *rsa.PrivateKey) (string, error) {
+	return signRS(crypto.SHA256, message, privateKey)
 }
 
-// DecryptRS256 decrypts a base64 rawUrlEncoded cipher string with a secret string and an RSA private key
+// ValidateRS256 validates a base64 rawUrlEncoded signature string with an RSA public key
 // using the RS256 algorithm.
-func DecryptRS256(encodedCipher string, label []byte, privateKey rsa.PrivateKey) (string, error) {
-	return decryptRS(sha256.New(), encodedCipher, label, privateKey)
+func ValidateRS256(message string, signature string, publicKey *rsa.PublicKey) error {
+	return validateRS(crypto.SHA256, message, signature, publicKey)
 }
 
-// EncryptRS384 signs a message string with a secret string and an RSA public key using the RS384 algorithm
-// with additional base64 rawURLEncoding of the result cipher.
-func EncryptRS384(message string, label []byte, publicKey rsa.PublicKey) (string, error) {
-	return encryptRS(sha512.New384(), message, label, publicKey)
+// SignRS384 signs a message string with an RSA private key using the RS384 algorithm
+// with additional base64 rawURLEncoding of the result signature.
+func SignRS384(message string, privateKey *rsa.PrivateKey) (string, error) {
+	return signRS(crypto.SHA384, message, privateKey)
 }
 
-// DecryptRS384 decrypts a base64 rawUrlEncoded cipher string with a secret string and an RSA private key
+// ValidateRS384 validates a base64 rawUrlEncoded signature string with an RSA public key
 // using the RS384 algorithm.
-func DecryptRS384(encodedCipher string, label []byte, privateKey rsa.PrivateKey) (string, error) {
-	return decryptRS(sha512.New384(), encodedCipher, label, privateKey)
+func ValidateRS384(message string, signature string, publicKey *rsa.PublicKey) error {
+	return validateRS(crypto.SHA384, message, signature, publicKey)
 }
 
-// EncryptRS512 signs a message string with a secret string and an RSA public key using the RS512 algorithm
-// with additional base64 rawURLEncoding of the result cipher.
-func EncryptRS512(message string, label []byte, publicKey rsa.PublicKey) (string, error) {
-	return encryptRS(sha512.New(), message, label, publicKey)
+// SignRS512 signs a message string with an RSA private key using the RS512 algorithm
+// with additional base64 rawURLEncoding of the result signature.
+func SignRS512(message string, privateKey *rsa.PrivateKey) (string, error) {
+	return signRS(crypto.SHA512, message, privateKey)
 }
 
-// DecryptRS512 decrypts a base64 rawUrlEncoded cipher string with a secret string and an RSA private key
+// ValidateRS512 validates a base64 rawUrlEncoded signature string with an RSA public key
 // using the RS512 algorithm.
-func DecryptRS512(encodedCipher string, label []byte, privateKey rsa.PrivateKey) (string, error) {
-	return decryptRS(sha512.New(), encodedCipher, label, privateKey)
+func ValidateRS512(message string, signature string, publicKey *rsa.PublicKey) error {
+	return validateRS(crypto.SHA512, message, signature, publicKey)
 }

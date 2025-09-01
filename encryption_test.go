@@ -3,8 +3,9 @@ package gojwt_test
 import (
 	"crypto/rand"
 	"crypto/rsa"
-	"github.com/tobyguelly/gojwt"
 	"testing"
+
+	"github.com/tobyguelly/gojwt"
 )
 
 func TestEncodeBase64(t *testing.T) {
@@ -171,9 +172,8 @@ func TestSignHS512(t *testing.T) {
 func TestEncryptAndDecryptRS256(t *testing.T) {
 	type rsaTest struct {
 		Input      string
-		Label      []byte
-		PublicKey  rsa.PublicKey
-		PrivateKey rsa.PrivateKey
+		PublicKey  *rsa.PublicKey
+		PrivateKey *rsa.PrivateKey
 	}
 	var tests []rsaTest
 	for i := 0; i < 4; i++ {
@@ -184,30 +184,23 @@ func TestEncryptAndDecryptRS256(t *testing.T) {
 		}
 		test := rsaTest{
 			Input:      "Hello World",
-			Label:      []byte{},
-			PublicKey:  privateKey.PublicKey,
-			PrivateKey: *privateKey,
+			PublicKey:  &privateKey.PublicKey,
+			PrivateKey: privateKey,
 		}
 		tests = append(tests, test)
 	}
 	for i, test := range tests {
-		signature, err := gojwt.EncryptRS256(test.Input, test.Label, test.PublicKey)
+		signature, err := gojwt.SignRS256(test.Input, test.PrivateKey)
 		if err != nil {
 			t.Errorf("Failed test because of error: %s", err.Error())
 			t.FailNow()
 		} else {
-			result, err := gojwt.DecryptRS256(signature, test.Label, test.PrivateKey)
+			err := gojwt.ValidateRS256(test.Input, signature, test.PublicKey)
 			if err != nil {
 				t.Errorf("Failed test because of error: %s", err.Error())
 				t.FailNow()
 			} else {
-				if test.Input == result {
-					t.Logf("Passed %d/%d tests!", i+1, len(tests))
-				} else {
-					t.Errorf("Output and expected output did not match: %s, secret %s\nFound:\t\t%s\nExpected:\t%s",
-						test.Input, test.Label, result, test.Input,
-					)
-				}
+				t.Logf("Passed %d/%d tests!", i+1, len(tests))
 			}
 		}
 	}
@@ -216,9 +209,8 @@ func TestEncryptAndDecryptRS256(t *testing.T) {
 func TestEncryptAndDecryptRS384(t *testing.T) {
 	type rsaTest struct {
 		Input      string
-		Label      []byte
-		PublicKey  rsa.PublicKey
-		PrivateKey rsa.PrivateKey
+		PublicKey  *rsa.PublicKey
+		PrivateKey *rsa.PrivateKey
 	}
 	var tests []rsaTest
 	for i := 0; i < 4; i++ {
@@ -229,30 +221,23 @@ func TestEncryptAndDecryptRS384(t *testing.T) {
 		}
 		test := rsaTest{
 			Input:      "Hello World",
-			Label:      []byte{},
-			PublicKey:  privateKey.PublicKey,
-			PrivateKey: *privateKey,
+			PublicKey:  &privateKey.PublicKey,
+			PrivateKey: privateKey,
 		}
 		tests = append(tests, test)
 	}
 	for i, test := range tests {
-		signature, err := gojwt.EncryptRS384(test.Input, test.Label, test.PublicKey)
+		signature, err := gojwt.SignRS384(test.Input, test.PrivateKey)
 		if err != nil {
 			t.Errorf("Failed test because of error: %s", err.Error())
 			t.FailNow()
 		} else {
-			result, err := gojwt.DecryptRS384(signature, test.Label, test.PrivateKey)
+			err := gojwt.ValidateRS384(test.Input, signature, test.PublicKey)
 			if err != nil {
 				t.Errorf("Failed test because of error: %s", err.Error())
 				t.FailNow()
 			} else {
-				if test.Input == result {
-					t.Logf("Passed %d/%d tests!", i+1, len(tests))
-				} else {
-					t.Errorf("Output and expected output did not match: %s, secret %s\nFound:\t\t%s\nExpected:\t%s",
-						test.Input, test.Label, result, test.Input,
-					)
-				}
+				t.Logf("Passed %d/%d tests!", i+1, len(tests))
 			}
 		}
 	}
@@ -261,9 +246,8 @@ func TestEncryptAndDecryptRS384(t *testing.T) {
 func TestEncryptAndDecryptRS512(t *testing.T) {
 	type rsaTest struct {
 		Input      string
-		Label      []byte
-		PublicKey  rsa.PublicKey
-		PrivateKey rsa.PrivateKey
+		PublicKey  *rsa.PublicKey
+		PrivateKey *rsa.PrivateKey
 	}
 	var tests []rsaTest
 	for i := 0; i < 4; i++ {
@@ -274,30 +258,23 @@ func TestEncryptAndDecryptRS512(t *testing.T) {
 		}
 		test := rsaTest{
 			Input:      "Hello World",
-			Label:      []byte{},
-			PublicKey:  privateKey.PublicKey,
-			PrivateKey: *privateKey,
+			PublicKey:  &privateKey.PublicKey,
+			PrivateKey: privateKey,
 		}
 		tests = append(tests, test)
 	}
 	for i, test := range tests {
-		signature, err := gojwt.EncryptRS512(test.Input, test.Label, test.PublicKey)
+		signature, err := gojwt.SignRS512(test.Input, test.PrivateKey)
 		if err != nil {
 			t.Errorf("Failed test because of error: %s", err.Error())
 			t.FailNow()
 		} else {
-			result, err := gojwt.DecryptRS512(signature, test.Label, test.PrivateKey)
+			err := gojwt.ValidateRS512(test.Input, signature, test.PublicKey)
 			if err != nil {
 				t.Errorf("Failed test because of error: %s", err.Error())
 				t.FailNow()
 			} else {
-				if test.Input == result {
-					t.Logf("Passed %d/%d tests!", i+1, len(tests))
-				} else {
-					t.Errorf("Output and expected output did not match: %s, secret %s\nFound:\t\t%s\nExpected:\t%s",
-						test.Input, test.Label, result, test.Input,
-					)
-				}
+				t.Logf("Passed %d/%d tests!", i+1, len(tests))
 			}
 		}
 	}

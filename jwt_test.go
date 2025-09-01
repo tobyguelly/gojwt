@@ -4,8 +4,9 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"fmt"
-	"github.com/tobyguelly/gojwt"
 	"testing"
+
+	"github.com/tobyguelly/gojwt"
 )
 
 func TestNewJWT(t *testing.T) {
@@ -269,8 +270,8 @@ func TestJWT_SignAndValidateWithKey(t *testing.T) {
 	type rsaTest struct {
 		Input         gojwt.JWT
 		Label         string
-		PublicKey     rsa.PublicKey
-		PrivateKey    rsa.PrivateKey
+		PublicKey     *rsa.PublicKey
+		PrivateKey    *rsa.PrivateKey
 		SignToken     bool
 		ExpectError   bool
 		ExpectedError error
@@ -294,8 +295,8 @@ func TestJWT_SignAndValidateWithKey(t *testing.T) {
 				Signature: "",
 			},
 			Label:         "",
-			PublicKey:     privateKey.PublicKey,
-			PrivateKey:    *privateKey,
+			PublicKey:     &privateKey.PublicKey,
+			PrivateKey:    privateKey,
 			SignToken:     true,
 			ExpectError:   false,
 			ExpectedError: nil,
@@ -319,8 +320,8 @@ func TestJWT_SignAndValidateWithKey(t *testing.T) {
 			Signature: "",
 		},
 		Label:         "",
-		PublicKey:     wrongKey.PublicKey,
-		PrivateKey:    *privateKey,
+		PublicKey:     &wrongKey.PublicKey,
+		PrivateKey:    privateKey,
 		SignToken:     true,
 		ExpectError:   true,
 		ExpectedError: gojwt.ErrInvSecKey,
@@ -333,8 +334,8 @@ func TestJWT_SignAndValidateWithKey(t *testing.T) {
 			},
 		},
 		Label:         "",
-		PublicKey:     privateKey.PublicKey,
-		PrivateKey:    *privateKey,
+		PublicKey:     &privateKey.PublicKey,
+		PrivateKey:    privateKey,
 		SignToken:     true,
 		ExpectError:   true,
 		ExpectedError: gojwt.ErrAlgNotImp,
@@ -347,15 +348,15 @@ func TestJWT_SignAndValidateWithKey(t *testing.T) {
 			},
 		},
 		Label:         "",
-		PublicKey:     privateKey.PublicKey,
-		PrivateKey:    *privateKey,
+		PublicKey:     &privateKey.PublicKey,
+		PrivateKey:    privateKey,
 		SignToken:     false,
 		ExpectError:   true,
 		ExpectedError: gojwt.ErrTokNotSig,
 	})
 	for i, test := range tests {
 		if test.SignToken {
-			err := test.Input.SignWithKey(test.Label, test.PublicKey)
+			err := test.Input.SignWithKey(test.PrivateKey)
 			if err != nil {
 				if test.ExpectError && err == test.ExpectedError {
 					t.Logf("Passed %d/%d tests!", i+1, len(tests))
@@ -365,7 +366,7 @@ func TestJWT_SignAndValidateWithKey(t *testing.T) {
 				}
 			}
 		}
-		err := test.Input.ValidateWithKey(test.Label, test.PrivateKey)
+		err := test.Input.ValidateWithKey(test.PublicKey)
 		if test.ExpectError {
 			if err != nil {
 				if err == test.ExpectedError {

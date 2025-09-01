@@ -1,9 +1,10 @@
 package gojwt_test
 
 import (
-	"github.com/tobyguelly/gojwt"
 	"testing"
 	"time"
+
+	"github.com/tobyguelly/gojwt"
 )
 
 func TestTime_Marshal(t *testing.T) {

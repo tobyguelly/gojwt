@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"strings"
+	"time"
 )
 
 // JWT is a struct holding the values a JWT.
@@ -82,8 +83,13 @@ func (this *JWT) IsSigned() (signed bool) {
 
 // IsExpired returns a bool, whether the token has already expired or is not valid yet.
 func (this *JWT) IsExpired() (expired bool) {
-	return (this.Payload.ExpirationTime != nil && this.Payload.ExpirationTime.Unix() <= Now().Unix()) ||
-		(this.Payload.NotBefore != nil && this.Payload.NotBefore.Unix() >= Now().Unix())
+	if this.Payload.ExpirationTime != nil && this.Payload.ExpirationTime.After(time.Now()) {
+		return true
+	}
+	if this.Payload.NotBefore != nil && this.Payload.NotBefore.Before(time.Now()) {
+		return true
+	}
+	return false
 }
 
 // Validate validates a JWT based on a given secret string using a symmetric encryption algorithm.
@@ -121,32 +127,29 @@ func (this *JWT) Validate(secret string) (err error) {
 // ErrTokNotSig if the token has not been signed yet, ErrInvTokPrd if the token period has expired
 // and ErrInvSecKey if the entered key and/or label is invalid corresponding to the signature.
 // Returns nil if the JWT is validated with the entered key.
-func (this *JWT) ValidateWithKey(label string, key rsa.PrivateKey) (err error) {
+func (this *JWT) ValidateWithKey(publicKey *rsa.PublicKey) (err error) {
 	res, err := this.Data()
 	if err != nil {
 		return err
 	}
-	algorithm, exists := DecryptionAlgorithms[this.Header.Algorithm]
+	algorithm, exists := ValidationAlgorithms[this.Header.Algorithm]
 	if !exists {
 		return ErrAlgNotImp
 	}
 	if !this.IsSigned() {
 		return ErrTokNotSig
 	}
-	result, err := algorithm(this.Signature, []byte(label), key)
+	err = algorithm(res, this.Signature, publicKey)
 	if err != nil {
-		if errors.Is(err, rsa.ErrDecryption) {
+		if errors.Is(err, rsa.ErrVerification) {
 			return ErrInvSecKey
 		}
 		return err
 	}
-	if res == result {
-		if this.IsExpired() {
-			return ErrInvTokPrd
-		}
-		return nil
+	if this.IsExpired() {
+		return ErrInvTokPrd
 	}
-	return ErrInvSecKey
+	return nil
 }
 
 // Sign signs a JWT using a symmetric encryption algorithm and creates the Signature,
@@ -170,16 +173,16 @@ func (this *JWT) Sign(secret string) (err error) {
 // saved in the JWT. This method overwrites the Signature field in the JWT if it exists.
 // Returns ErrAlgNotImp if the algorithm in the Header is not implemented yet or a symmetric encryption algorithm
 // or returns ErrInvTokPrd if the token period has expired before signing.
-func (this *JWT) SignWithKey(label string, key rsa.PublicKey) (err error) {
+func (this *JWT) SignWithKey(privateKey *rsa.PrivateKey) (err error) {
 	res, err := this.Data()
 	if err != nil {
 		return err
 	}
-	algorithm, exists := EncryptionAlgorithms[this.Header.Algorithm]
+	algorithm, exists := SigningAlgorithms[this.Header.Algorithm]
 	if !exists {
 		return ErrAlgNotImp
 	}
-	this.Signature, err = algorithm(res, []byte(label), key)
+	this.Signature, err = algorithm(res, privateKey)
 	return err
 }
 
@@ -220,8 +223,8 @@ func (this *JWT) SignParse(secret string) (token string, err error) {
 }
 
 // SignParseWithKey performs the SignWithKey and Parse operations in one single step.
-func (this *JWT) SignParseWithKey(label string, key rsa.PublicKey) (token string, err error) {
-	err = this.SignWithKey(label, key)
+func (this *JWT) SignParseWithKey(privateKey *rsa.PrivateKey) (token string, err error) {
+	err = this.SignWithKey(privateKey)
 	if err != nil {
 		return "", err
 	}
